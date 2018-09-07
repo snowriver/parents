@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tenzhao.common.dao.AbstractDAO">
+ <select id="getTimeForInt"  resultType="java.lang.Integer">
+    SELECT unix_timestamp()
+  </select>
+  <select id="getTimeForLong"  resultType="java.lang.Long">
+    SELECT DATE_FORMAT(NOW(),'%Y%m%d%H%i%s')
+  </select>
+ <sql id="criteria_SQL_condition">
+	<where>
+		<foreach collection="condition.oredCriteria" item="criteria" separator="or">
+			<trim prefix="(" prefixOverrides="and" suffix=")">
+				<foreach collection="criteria.criteria" item="criterion">
+					<include refid="com.tenzhao.common.dao.AbstractDAO.where_choose_foreach"></include>
+				</foreach>
+			</trim>
+		</foreach>
+	</where>
+</sql> 
+ 
+	<sql id="criteria_SQL_group">
+		<if test="condition.projection !=null">
+			<if test="condition.projection.propertiesName!=null and condition.projection.propertiesName.size()>0">
+				GROUP BY
+				<foreach collection="condition.projection.propertiesName" item="attrName" separator=",">
+					${attrName}
+				</foreach>
+			</if>
+			<if test="condition.projection.oredCriteria !=null and condition.projection.oredCriteria.size()>0">
+				HAVING
+				<foreach collection="condition.projection.oredCriteria" item="criteria" separator="or">
+					<trim prefix="(" prefixOverrides="and" suffix=")">
+						<foreach collection="criteria.criteria" item="criterion">
+							<include refid="com.tenzhao.common.dao.AbstractDAO.where_choose_foreach"></include>
+						</foreach>
+					</trim>
+				</foreach>
+			</if>
+		</if>
+</sql> 
+
+<sql id="where_choose_foreach">
+	<choose>
+		<when test="criterion.keyword == 'noValue'">
+			AND ${criterion.propertyName}
+		</when>
+		<when test="criterion.keyword == 'singleValue'">
+			AND ${criterion.propertyName} #{criterion.value}
+		</when>
+		<when test="criterion.keyword=='listValue'">
+			AND ${criterion.propertyName}
+			<foreach collection="criterion.values" item="value" open="("
+				separator="," close=")">
+				#{value}
+			</foreach>
+		</when>
+		<when test="criterion.keyword == 'like'">
+			<if test="criterion.likeMode=='ANYWHERE'">
+				AND ${criterion.propertyName} concat('%',#{criterion.value},'%')
+			</if>
+			<if test="criterion.likeMode=='EXACT'">
+				AND ${criterion.propertyName} #{criterion.value}
+			</if>
+			<if test="criterion.likeMode=='START'">
+				AND ${criterion.propertyName} concat(#{criterion.value},'%')
+			</if>
+			<if test="criterion.likeMode=='END'">
+				AND ${criterion.propertyName} concat('%',#{criterion.value})
+			</if>
+		</when>
+		<when test="criterion.keyword == 'betweenValue'">
+			AND ${criterion.propertyName} #{criterion.value} and
+			#{criterion.secondValue}
+		</when>
+	</choose>
+</sql>
+ <sql id="criteria_SQL_lockMode">
+    ${condition.lockMode}
+ </sql> 
+ <sql id="criteria_SQL_orderBy">
+<if test="condition.orderBy !=null">
+	ORDER BY ${condition.orderBy}
+</if>
+</sql>
+<sql id="criteria_SQL_pagination">
+	  <if test="condition.pageNumber !=null and condition.maxResults !=null">
+		limit ${condition.maxResults * (condition.pageNumber - 1)},${condition.maxResults}
+	  </if>
+</sql> 
+</mapper>
