@@ -18,7 +18,6 @@
     <plugin.archetype.version>3.0.1</plugin.archetype.version>
     <plugin.site.version>3.6</plugin.site.version>
     <plugin.eclipse.version>2.9</plugin.eclipse.version>
-    <plugin.idea.version>2.2.1</plugin.idea.version>
   </properties>
 
   <build>
